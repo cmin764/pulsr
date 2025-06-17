@@ -1,19 +1,13 @@
-from __future__ import annotations
-
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from uuid import UUID
 
 from sqlmodel import SQLModel, Field, Relationship, JSON
 from pydantic import BaseModel
 
 from pulsr.models.base import BaseModel as PulsrBaseModel
-
-if TYPE_CHECKING:
-    from pulsr.models.pipeline import Pipeline, PipelineRun
-    from pulsr.models.artifact import Artifact
-
+from pulsr.models.artifact import Artifact
 
 class StepRunStatus(StrEnum):
     """Step run status enumeration."""
@@ -49,8 +43,8 @@ class Step(BaseStep, PulsrBaseModel, table=True):
     """Step table model representing an atomic unit of work."""
 
     # Relationships
-    pipeline: Pipeline = Relationship(back_populates="steps")
-    step_runs: list[StepRun] = Relationship(
+    pipeline: "Pipeline" = Relationship(back_populates="steps")
+    step_runs: list["StepRun"] = Relationship(
         back_populates="step",
         cascade_delete=True
     )
@@ -63,18 +57,18 @@ class StepRun(BaseStepRun, PulsrBaseModel, table=True):
 
     # Relationships
     step: Step = Relationship(back_populates="step_runs")
-    pipeline_run: PipelineRun = Relationship(back_populates="step_runs")
+    pipeline_run: "PipelineRun" = Relationship(back_populates="step_runs")
     created_artifacts: list[Artifact] = Relationship(
         back_populates="created_by_step_run",
         cascade_delete=True
     )
 
 
-class StepDependency(SQLModel, table=True):
+class StepDependency(PulsrBaseModel, table=True):
     """Step dependency table model representing step relationships."""
 
-    step_id: UUID = Field(foreign_key="step.id", primary_key=True)
-    depends_on_step_id: UUID = Field(foreign_key="step.id", primary_key=True)
+    step_id: UUID = Field(foreign_key="step.id")
+    depends_on_step_id: UUID = Field(foreign_key="step.id")
 
 
 # API schema models - inherit from base classes (no table creation)

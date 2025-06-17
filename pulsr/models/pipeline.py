@@ -1,17 +1,12 @@
-from __future__ import annotations
-
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, TYPE_CHECKING
 from uuid import UUID
 
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import BaseModel
 
 from pulsr.models.base import BaseModel as PulsrBaseModel
-
-if TYPE_CHECKING:
-    from pulsr.models.step import Step, StepRun, CreateStep, CreateStepDependency, RetrieveStep, RetrieveStepRun
+from pulsr.models.step import Step, StepRun, CreateStep, CreateStepDependency, RetrieveStep, RetrieveStepRun
 
 
 class PipelineRunStatus(StrEnum):
@@ -47,7 +42,7 @@ class Pipeline(BasePipeline, PulsrBaseModel, table=True):
         back_populates="pipeline",
         cascade_delete=True
     )
-    runs: list[PipelineRun] = Relationship(
+    runs: list["PipelineRun"] = Relationship(
         back_populates="pipeline",
         cascade_delete=False  # Restrict deletion if runs exist
     )

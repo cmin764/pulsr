@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from enum import StrEnum
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from uuid import UUID
 from datetime import datetime
 
@@ -9,9 +7,6 @@ from sqlmodel import SQLModel, Field, Relationship, JSON
 from pydantic import BaseModel
 
 from pulsr.models.base import BaseModel as PulsrBaseModel
-
-if TYPE_CHECKING:
-    from pulsr.models.step import StepRun
 
 
 class ArtifactType(StrEnum):
@@ -49,7 +44,7 @@ class Artifact(BaseArtifact, PulsrBaseModel, table=True):
     """Artifact table model representing data passed between steps."""
 
     # Relationships
-    created_by_step_run: StepRun = Relationship(back_populates="created_artifacts")
+    created_by_step_run: "StepRun" = Relationship(back_populates="created_artifacts")
 
 
 class ArtifactUsage(BaseArtifactUsage, PulsrBaseModel, table=True):
@@ -83,4 +78,6 @@ class CreateArtifactUsage(BaseModel):
 
 class RetrieveArtifactUsage(BaseArtifactUsage):
     """Schema for retrieving an artifact usage."""
-    pass
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None

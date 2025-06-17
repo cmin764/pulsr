@@ -1,5 +1,8 @@
-from sqlmodel import SQLModel, create_engine, Session
+from sqlmodel import create_engine, Session
+
 from pulsr.core.config import settings
+from pulsr.models import SQLModel
+
 
 # Create engine with SQLite
 engine = create_engine(
