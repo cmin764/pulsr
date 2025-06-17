@@ -13,12 +13,15 @@ RUN pip install uv
 
 # Copy dependency files
 COPY pyproject.toml ./
+COPY README.md ./
+# Copy application code
+COPY pulsr/ ./pulsr/
 
 # Install dependencies
 RUN uv pip install --system -e .
 
-# Copy application code
-COPY pulsr/ ./pulsr/
+# Copy rest of the code
+COPY . .
 
 # Expose port
 EXPOSE 8000
