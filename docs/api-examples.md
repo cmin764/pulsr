@@ -79,10 +79,8 @@ http POST localhost:8000/api/v1/pipelines/ \
       "description": "Evaluate model performance",
       "command": "python evaluate.py"
     }
-  ]'
-
-# Note: In a real scenario, you would use the actual step IDs returned from the pipeline creation
-# This example shows the structure - replace with actual UUIDs
+  ]' \
+  step_dependencies:='[{"step_name": "model_evaluation", "depends_on_step_name": "model_training"}]'
 ```
 
 ### 3. List All Pipelines

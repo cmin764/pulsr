@@ -38,7 +38,7 @@ def test_create_pipeline(client: TestClient):
     }
 
     response = client.post("/api/v1/pipelines/", json=pipeline_data)
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     data = response.json()
     assert data["name"] == "test-pipeline"
@@ -62,7 +62,7 @@ def test_list_pipelines(client: TestClient):
     }
 
     create_response = client.post("/api/v1/pipelines/", json=pipeline_data)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     # Now list pipelines
     list_response = client.get("/api/v1/pipelines/")
@@ -88,7 +88,7 @@ def test_get_pipeline(client: TestClient):
     }
 
     create_response = client.post("/api/v1/pipelines/", json=pipeline_data)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     pipeline_id = create_response.json()["id"]
 
@@ -115,13 +115,13 @@ def test_trigger_pipeline_run(client: TestClient):
     }
 
     create_response = client.post("/api/v1/pipelines/", json=pipeline_data)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     pipeline_id = create_response.json()["id"]
 
     # Now trigger a run
     run_response = client.post(f"/api/v1/pipelines/{pipeline_id}/trigger_run")
-    assert run_response.status_code == 200
+    assert run_response.status_code == 201
 
     run_data = run_response.json()
     assert run_data["pipeline_id"] == pipeline_id

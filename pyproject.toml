@@ -16,8 +16,8 @@ dependencies = [
     "pydantic-settings>=2.0.0",
 ]
 
-[project.optional-dependencies]
-dev = [
+[tool.uv]
+dev-dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "httpx>=0.25.0",
