@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./pulsr:/app/pulsr
+      - ./pulsr.db:/app/pulsr.db
+    environment:
+      - DEBUG=true
+    restart: unless-stopped
+
+  # For future development with PostgreSQL
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: pulsr
+  #     POSTGRES_USER: pulsr
+  #     POSTGRES_PASSWORD: pulsr
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:
