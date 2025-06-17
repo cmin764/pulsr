@@ -1,10 +1,11 @@
+from typing import Any
 from fastapi import HTTPException
 
 
 class PulsrException(Exception):
     """Base exception for Pulsr application."""
 
-    def __init__(self, message: str, details: dict[str, any] | None = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         self.message = message
         self.details = details or {}
         super().__init__(self.message)

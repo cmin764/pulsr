@@ -1,11 +1,18 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import StrEnum
+from typing import Any, TYPE_CHECKING
 from uuid import UUID
 
 from sqlmodel import SQLModel, Field, Relationship, JSON
 from pydantic import BaseModel
 
 from pulsr.models.base import BaseModel as PulsrBaseModel
+
+if TYPE_CHECKING:
+    from pulsr.models.pipeline import Pipeline, PipelineRun
+    from pulsr.models.artifact import Artifact
 
 
 class StepRunStatus(StrEnum):
@@ -17,17 +24,33 @@ class StepRunStatus(StrEnum):
     SKIPPED = "skipped"
 
 
-class Step(PulsrBaseModel, table=True):
-    """Step model representing an atomic unit of work."""
-
+# Base classes with core fields - inherit from SQLModel (no table creation)
+class BaseStep(SQLModel):
+    """Base step model with core fields."""
     pipeline_id: UUID = Field(foreign_key="pipeline.id")
     name: str = Field(index=True)
     description: str | None = None
     command: str  # Bash command or script path
 
+
+class BaseStepRun(SQLModel):
+    """Base step run model with core fields."""
+    step_id: UUID = Field(foreign_key="step.id")
+    pipeline_run_id: UUID = Field(foreign_key="pipelinerun.id")
+    status: StepRunStatus = Field(default=StepRunStatus.PENDING)
+    logs: str | None = None  # stdout/stderr
+    step_metadata: dict[str, Any] | None = Field(default={}, sa_type=JSON, alias="metadata")
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+# Table models - only these inherit from SQLModel with table=True
+class Step(BaseStep, PulsrBaseModel, table=True):
+    """Step table model representing an atomic unit of work."""
+
     # Relationships
-    pipeline: "Pipeline" = Relationship(back_populates="steps")
-    step_runs: list["StepRun"] = Relationship(
+    pipeline: Pipeline = Relationship(back_populates="steps")
+    step_runs: list[StepRun] = Relationship(
         back_populates="step",
         cascade_delete=True
     )
@@ -35,47 +58,53 @@ class Step(PulsrBaseModel, table=True):
     # Dependencies handled through StepDependency table
 
 
-class StepRun(PulsrBaseModel, table=True):
-    """Step run model representing a step execution instance."""
-
-    step_id: UUID = Field(foreign_key="step.id")
-    pipeline_run_id: UUID = Field(foreign_key="pipelinerun.id")
-    status: StepRunStatus = Field(default=StepRunStatus.PENDING)
-    logs: str | None = None  # stdout/stderr
-    metadata: dict[str, any] | None = Field(default={}, sa_column_kwargs={"type_": JSON})
-    started_at: datetime | None = None
-    completed_at: datetime | None = None
+class StepRun(BaseStepRun, PulsrBaseModel, table=True):
+    """Step run table model representing a step execution instance."""
 
     # Relationships
     step: Step = Relationship(back_populates="step_runs")
-    pipeline_run: "PipelineRun" = Relationship(back_populates="step_runs")
-    created_artifacts: list["Artifact"] = Relationship(
+    pipeline_run: PipelineRun = Relationship(back_populates="step_runs")
+    created_artifacts: list[Artifact] = Relationship(
         back_populates="created_by_step_run",
         cascade_delete=True
     )
 
 
 class StepDependency(SQLModel, table=True):
-    """Step dependency model representing step relationships."""
+    """Step dependency table model representing step relationships."""
 
     step_id: UUID = Field(foreign_key="step.id", primary_key=True)
     depends_on_step_id: UUID = Field(foreign_key="step.id", primary_key=True)
 
 
-# Schema models for API
-class StepCreate(BaseModel):
+# API schema models - inherit from base classes (no table creation)
+class CreateStep(BaseModel):
     """Schema for creating a step."""
     name: str
     description: str | None = None
     command: str
 
 
-class StepDependencyCreate(BaseModel):
+class RetrieveStep(BaseStep):
+    """Schema for retrieving a step."""
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class CreateStepDependency(BaseModel):
     """Schema for creating a step dependency."""
     step_id: UUID
     depends_on_step_id: UUID
 
 
-# Import here to avoid circular imports
-from pulsr.models.pipeline import Pipeline, PipelineRun
-from pulsr.models.artifact import Artifact
+class CreateStepRun(BaseModel):
+    """Schema for creating a step run (no additional fields needed)."""
+    pass
+
+
+class RetrieveStepRun(BaseStepRun):
+    """Schema for retrieving a step run."""
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None

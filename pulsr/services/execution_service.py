@@ -125,7 +125,7 @@ class ExecutionService:
             step_run.logs = logs
 
         if metadata is not None:
-            step_run.metadata = metadata
+            step_run.step_metadata = metadata
 
         self.session.add(step_run)
         self.session.commit()

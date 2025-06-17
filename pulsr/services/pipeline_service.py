@@ -1,7 +1,9 @@
 from datetime import datetime, UTC
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from pulsr.models.pipeline import Pipeline, PipelineRun, PipelineRunStatus
 from pulsr.models.step import Step, StepRun, StepRunStatus, StepDependency
@@ -20,7 +22,7 @@ class PipelineService:
         self,
         name: str,
         description: str | None,
-        steps: list[dict[str, any]],
+        steps: list[dict[str, Any]],
         step_dependencies: list[dict[str, UUID]] | None = None
     ) -> Pipeline:
         """
@@ -98,12 +100,13 @@ class PipelineService:
             pipeline_id: Pipeline ID
 
         Returns:
-            Pipeline instance
+            Pipeline instance with loaded steps
 
         Raises:
             PipelineNotFoundError: If pipeline not found
         """
-        pipeline = self.session.get(Pipeline, pipeline_id)
+        statement = select(Pipeline).options(selectinload(Pipeline.steps)).where(Pipeline.id == pipeline_id)
+        pipeline = self.session.exec(statement).first()
         if not pipeline:
             raise PipelineNotFoundError(str(pipeline_id))
         return pipeline
@@ -164,14 +167,14 @@ class PipelineService:
 
     def get_pipeline_run(self, pipeline_id: UUID, run_id: UUID) -> PipelineRun:
         """
-        Get pipeline run by ID.
+        Get pipeline run by ID with step runs.
 
         Args:
             pipeline_id: Pipeline ID
             run_id: Run ID
 
         Returns:
-            PipelineRun instance
+            PipelineRun instance with loaded step runs
 
         Raises:
             PipelineNotFoundError: If pipeline not found
@@ -180,8 +183,8 @@ class PipelineService:
         # Verify pipeline exists
         self.get_pipeline(pipeline_id)
 
-        # Get run
-        statement = select(PipelineRun).where(
+        # Get run with step runs loaded
+        statement = select(PipelineRun).options(selectinload(PipelineRun.step_runs)).where(
             PipelineRun.id == run_id,
             PipelineRun.pipeline_id == pipeline_id
         )

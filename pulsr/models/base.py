@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime, UTC
 from uuid import UUID, uuid4
 
@@ -13,5 +15,9 @@ class BaseModel(SQLModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.updated_at is None:
+        self.updated_at = datetime.now(UTC)
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name != "updated_at":  # Prevent infinite recursion
             self.updated_at = datetime.now(UTC)

@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
-from pulsr.models.pipeline import Pipeline, PipelineCreate
+from pulsr.models.pipeline import Pipeline, CreatePipeline, RetrievePipeline
 from pulsr.services.pipeline_service import PipelineService
 from pulsr.api.deps import get_pipeline_service
 
@@ -10,9 +10,9 @@ from pulsr.api.deps import get_pipeline_service
 router = APIRouter(prefix="/pipelines", tags=["pipelines"])
 
 
-@router.post("/", response_model=Pipeline)
+@router.post("/", response_model=RetrievePipeline, status_code=status.HTTP_201_CREATED)
 async def create_pipeline(
-    pipeline_data: PipelineCreate,
+    pipeline_data: CreatePipeline,
     service: PipelineService = Depends(get_pipeline_service)
 ) -> Pipeline:
     """Register a new pipeline with steps and dependencies."""
@@ -58,7 +58,7 @@ async def list_pipelines(
     return service.list_pipelines(skip=skip, limit=limit)
 
 
-@router.get("/{pipeline_id}", response_model=Pipeline)
+@router.get("/{pipeline_id}", response_model=RetrievePipeline)
 async def get_pipeline(
     pipeline_id: UUID,
     service: PipelineService = Depends(get_pipeline_service)

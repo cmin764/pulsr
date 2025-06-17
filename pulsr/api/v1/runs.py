@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, status
 
-from pulsr.models.pipeline import PipelineRun
+from pulsr.models.pipeline import PipelineRun, RetrievePipelineRun
 from pulsr.services.pipeline_service import PipelineService
 from pulsr.services.execution_service import ExecutionService
 from pulsr.api.deps import get_pipeline_service, get_execution_service
@@ -11,7 +11,7 @@ from pulsr.api.deps import get_pipeline_service, get_execution_service
 router = APIRouter(prefix="/pipelines", tags=["pipeline-runs"])
 
 
-@router.post("/{pipeline_id}/trigger_run", response_model=PipelineRun)
+@router.post("/{pipeline_id}/trigger_run", response_model=RetrievePipelineRun, status_code=status.HTTP_201_CREATED)
 async def trigger_pipeline_run(
     pipeline_id: UUID,
     background_tasks: BackgroundTasks,
@@ -41,7 +41,7 @@ async def list_pipeline_runs(
     return service.list_pipeline_runs(pipeline_id, skip=skip, limit=limit)
 
 
-@router.get("/{pipeline_id}/runs/{run_id}", response_model=PipelineRun)
+@router.get("/{pipeline_id}/runs/{run_id}", response_model=RetrievePipelineRun)
 async def get_pipeline_run(
     pipeline_id: UUID,
     run_id: UUID,
