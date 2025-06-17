@@ -74,22 +74,22 @@ class StepDependency(PulsrBaseModel, table=True):
 # API schema models - inherit from base classes (no table creation)
 class CreateStep(BaseModel):
     """Schema for creating a step."""
-    name: str
+    name: str = Field(..., min_length=1, description="Must not be empty")
     description: str | None = None
-    command: str
+    command: str = Field(..., min_length=1, description="Must not be empty")
 
 
 class RetrieveStep(BaseStep):
     """Schema for retrieving a step."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None
 
 
 class CreateStepDependency(BaseModel):
-    """Schema for creating a step dependency."""
-    step_id: UUID
-    depends_on_step_id: UUID
+    """Schema for creating a step dependency by passing their names."""
+    step_name: str
+    depends_on_step_name: str
 
 
 class CreateStepRun(BaseModel):
@@ -101,4 +101,4 @@ class RetrieveStepRun(BaseStepRun):
     """Schema for retrieving a step run."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None

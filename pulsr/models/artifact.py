@@ -66,7 +66,7 @@ class RetrieveArtifact(BaseArtifact):
     """Schema for retrieving an artifact."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None
 
 
 class CreateArtifactUsage(BaseModel):
@@ -80,4 +80,4 @@ class RetrieveArtifactUsage(BaseArtifactUsage):
     """Schema for retrieving an artifact usage."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None

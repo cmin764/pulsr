@@ -6,8 +6,8 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
 from pulsr.models.pipeline import Pipeline, PipelineRun, PipelineRunStatus
-from pulsr.models.step import Step, StepRun, StepRunStatus, StepDependency
-from pulsr.core.exceptions import PipelineNotFoundError, PipelineRunNotFoundError, InvalidPipelineError
+from pulsr.models.step import CreateStep, CreateStepDependency, Step, StepRun, StepRunStatus, StepDependency
+from pulsr.core.exceptions import PipelineNotFoundError, PipelineRunNotFoundError
 from pulsr.services.validation_service import ValidationService
 
 
@@ -22,8 +22,8 @@ class PipelineService:
         self,
         name: str,
         description: str | None,
-        steps: list[dict[str, Any]],
-        step_dependencies: list[dict[str, UUID]] | None = None
+        steps: list[CreateStep],
+        step_dependencies: list[CreateStepDependency] | None = None
     ) -> Pipeline:
         """
         Create a new pipeline with steps and dependencies.
@@ -43,16 +43,19 @@ class PipelineService:
         if step_dependencies is None:
             step_dependencies = []
 
-        # Generate IDs for steps
-        for step in steps:
-            if "id" not in step:
-                step["id"] = uuid4()
-
-        # Validate each step definition
-        for step in steps:
-            self.validation_service.validate_step_definition(step)
-
         # Validate dependencies and get execution order
+        steps_dict = {}
+        for step in steps:
+            steps_dict[step.name] = {"id": uuid4(), **step.model_dump()}
+        steps = list(steps_dict.values())
+        step_dependencies = [
+            {
+                "step_id": steps_dict[dep.step_name]["id"],
+                "depends_on_step_id": steps_dict[dep.depends_on_step_name]["id"],
+                **dep.model_dump()
+            }
+            for dep in step_dependencies
+        ]
         execution_order = self.validation_service.validate_pipeline_dependencies(
             steps, step_dependencies
         )
@@ -61,30 +64,29 @@ class PipelineService:
         pipeline = Pipeline(
             name=name,
             description=description,
-            updated_at=datetime.now(UTC)
         )
         self.session.add(pipeline)
-        self.session.flush()  # Get the pipeline ID
+        self.session.flush()  # to get the pipeline ID
 
         # Create steps
-        step_objects = []
+        step_objects = {}
         for step_def in steps:
             step = Step(
                 id=step_def["id"],
                 pipeline_id=pipeline.id,
                 name=step_def["name"],
                 description=step_def.get("description"),
-                command=step_def["command"],
-                updated_at=datetime.now(UTC)
+                command=step_def["command"]
             )
-            step_objects.append(step)
             self.session.add(step)
+            self.session.flush()
+            step_objects[step.name] = step.id
 
         # Create step dependencies
         for dep in step_dependencies:
             dependency = StepDependency(
-                step_id=dep["step_id"],
-                depends_on_step_id=dep["depends_on_step_id"]
+                step_id=step_objects[dep["step_name"]],
+                depends_on_step_id=step_objects[dep["depends_on_step_name"]]
             )
             self.session.add(dependency)
 
@@ -145,8 +147,7 @@ class PipelineService:
         # Create pipeline run
         pipeline_run = PipelineRun(
             pipeline_id=pipeline_id,
-            status=PipelineRunStatus.PENDING,
-            updated_at=datetime.now(UTC)
+            status=PipelineRunStatus.PENDING
         )
         self.session.add(pipeline_run)
         self.session.flush()  # Get the run ID
@@ -156,8 +157,7 @@ class PipelineService:
             step_run = StepRun(
                 step_id=step.id,
                 pipeline_run_id=pipeline_run.id,
-                status=StepRunStatus.PENDING,
-                updated_at=datetime.now(UTC)
+                status=StepRunStatus.PENDING
             )
             self.session.add(step_run)
 

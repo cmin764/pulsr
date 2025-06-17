@@ -70,7 +70,7 @@ class RetrievePipeline(BasePipeline):
     """Schema for retrieving a pipeline with steps."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None
     steps: list[RetrieveStep]
 
 
@@ -83,5 +83,5 @@ class RetrievePipelineRun(BasePipelineRun):
     """Schema for retrieving a pipeline run with step runs."""
     id: UUID
     created_at: datetime
-    updated_at: datetime | None
+    # updated_at: datetime | None
     step_runs: list[RetrieveStepRun]

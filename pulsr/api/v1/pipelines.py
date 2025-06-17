@@ -16,33 +16,11 @@ async def create_pipeline(
     service: PipelineService = Depends(get_pipeline_service)
 ) -> Pipeline:
     """Register a new pipeline with steps and dependencies."""
-
-    # Convert step dependencies to the format expected by the service
-    step_deps = []
-    if pipeline_data.step_dependencies:
-        step_deps = [
-            {
-                "step_id": dep.step_id,
-                "depends_on_step_id": dep.depends_on_step_id
-            }
-            for dep in pipeline_data.step_dependencies
-        ]
-
-    # Convert steps to dict format
-    steps = [
-        {
-            "name": step.name,
-            "description": step.description,
-            "command": step.command
-        }
-        for step in pipeline_data.steps
-    ]
-
     pipeline = service.create_pipeline(
         name=pipeline_data.name,
         description=pipeline_data.description,
-        steps=steps,
-        step_dependencies=step_deps
+        steps=pipeline_data.steps,
+        step_dependencies=pipeline_data.step_dependencies
     )
 
     return pipeline

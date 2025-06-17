@@ -2,6 +2,7 @@ from uuid import UUID
 
 from pulsr.utils.topological_sort import topological_sort, validate_dependencies
 from pulsr.core.exceptions import InvalidPipelineError
+from pulsr.models.step import CreateStep
 
 
 class ValidationService:
@@ -10,7 +11,7 @@ class ValidationService:
     @staticmethod
     def validate_pipeline_dependencies(
         steps: list[dict],
-        step_dependencies: list[dict[str, UUID]]
+        step_dependencies: list[dict[str, str]]
     ) -> list[UUID]:
         """
         Validate pipeline step dependencies and return execution order.
@@ -48,27 +49,3 @@ class ValidationService:
         execution_order = topological_sort(dependencies)
 
         return execution_order
-
-    @staticmethod
-    def validate_step_definition(step: dict) -> None:
-        """
-        Validate a single step definition.
-
-        Args:
-            step: Step definition dictionary
-
-        Raises:
-            InvalidPipelineError: If step definition is invalid
-        """
-        required_fields = ["name", "command"]
-        for field in required_fields:
-            if field not in step or not step[field]:
-                raise InvalidPipelineError(f"Step is missing required field: {field}")
-
-        # Validate step name format (basic validation)
-        if not isinstance(step["name"], str) or len(step["name"].strip()) == 0:
-            raise InvalidPipelineError("Step name must be a non-empty string")
-
-        # Validate command format
-        if not isinstance(step["command"], str) or len(step["command"].strip()) == 0:
-            raise InvalidPipelineError("Step command must be a non-empty string")

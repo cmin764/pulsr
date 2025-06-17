@@ -34,7 +34,7 @@ class ExecutionService:
         # Update pipeline run status
         pipeline_run.status = PipelineRunStatus.RUNNING
         pipeline_run.started_at = datetime.now(UTC)
-        pipeline_run.updated_at = datetime.now(UTC)
+        # pipeline_run.updated_at = datetime.now(UTC)
 
         self.session.add(pipeline_run)
         self.session.commit()
@@ -60,7 +60,7 @@ class ExecutionService:
         # Update pipeline run status
         pipeline_run.status = status
         pipeline_run.completed_at = datetime.now(UTC)
-        pipeline_run.updated_at = datetime.now(UTC)
+        # pipeline_run.updated_at = datetime.now(UTC)
 
         self.session.add(pipeline_run)
         self.session.commit()
@@ -85,7 +85,7 @@ class ExecutionService:
         # Update step run status
         step_run.status = StepRunStatus.RUNNING
         step_run.started_at = datetime.now(UTC)
-        step_run.updated_at = datetime.now(UTC)
+        # step_run.updated_at = datetime.now(UTC)
 
         self.session.add(step_run)
         self.session.commit()
@@ -119,13 +119,13 @@ class ExecutionService:
         # Update step run status
         step_run.status = status
         step_run.completed_at = datetime.now(UTC)
-        step_run.updated_at = datetime.now(UTC)
+        # step_run.updated_at = datetime.now(UTC)
 
         if logs is not None:
             step_run.logs = logs
 
         if metadata is not None:
-            step_run.step_metadata = metadata
+            step_run.metadata = metadata
 
         self.session.add(step_run)
         self.session.commit()
