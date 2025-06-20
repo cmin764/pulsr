@@ -27,7 +27,7 @@ async def create_pipeline(
 
 
 @router.get("/", response_model=list[Pipeline])
-async def list_pipelines(
+def list_pipelines(
     skip: int = 0,
     limit: int = 100,
     service: PipelineService = Depends(get_pipeline_service)

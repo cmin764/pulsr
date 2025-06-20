@@ -61,3 +61,10 @@ class PipelineExecutionError(PulsrHTTPException):
             status_code=500,
             detail=f"Pipeline execution error: {message}"
         )
+
+
+class ExecutionError(PulsrException):
+    """Raised when executor operation fails."""
+
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
+        super().__init__(message=f"Execution error: {message}", details=details)
