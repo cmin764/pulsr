@@ -170,70 +170,35 @@ flowchart TD
 ```mermaid
 flowchart TD
     %% Pipeline configuration
-    Config[Pipeline Configuration] --> |Defines| Pipeline
-    Pipeline --> |Execution Mode| ExecutionMode{Execution Mode}
-    ExecutionMode --> |Serial| SerialExec[Serial Execution]
-    ExecutionMode --> |Parallel| ParallelExec[Parallel Execution]
-    ExecutionMode --> |Batch| BatchExec[Parallel Batch Execution]
+    Config[Pipeline Configuration] --> Pipeline
+    Pipeline --> |Defines| ExecMode[Execution Mode]
+    Pipeline --> |Creates| DockerImg[Docker Image]
     
-    %% Dockerfile generation
-    Pipeline --> |Generate| Dockerfile[Dockerfile]
-    Dockerfile --> |Build| DockerImage[Docker Image]
+    %% Core execution flow
+    Pipeline --> |Runs on| Worker[Worker Agent]
+    Worker --> |Manages| DockerContainer[Docker Containers]
     
-    %% First step execution
-    Pipeline --> |First Step| Step1[Step 1]
-    DockerImage --> |Run container for| Step1
-    Step1 --> |Produces| Artifacts1[Artifacts]
+    %% Execution modes
+    ExecMode --> |Configures| ExecPattern[Execution Pattern]
+    ExecPattern --> |Serial/Parallel/Batch| DockerContainer
     
-    %% Artifact storage
-    Artifacts1 --> |Store| ArtifactDB[(Artifact Database)]
-    ArtifactDB --> |"Standardized Naming"| VersionedArtifacts[Versioned Artifacts]
-    
-    %% Parallel execution branch
-    ParallelExec --> |Fetch Artifacts| Artifacts1
-    Artifacts1 --> |Input to| Step2A[Step 2A]
-    Artifacts1 --> |Input to| Step2B[Step 2B]
-    Artifacts1 --> |Input to| Step2C[Step 2C]
-    DockerImage --> |Run container for| Step2A
-    DockerImage --> |Run container for| Step2B
-    DockerImage --> |Run container for| Step2C
-    
-    %% Serial execution branch
-    SerialExec --> |Fetch Artifacts| Artifacts1
-    Artifacts1 --> |Input to| Step2[Step 2]
-    DockerImage --> |Run container for| Step2
-    Step2 --> |Produces| Artifacts2[Artifacts]
-    Artifacts2 --> |Store| ArtifactDB
-    Artifacts2 --> |Input to| Step3[Step 3]
-    DockerImage --> |Run container for| Step3
-    
-    %% Batch execution branch
-    BatchExec --> |Fetch & Batch| Artifacts1
-    Artifacts1 --> |Batch 1| Batch1[Batch 1]
-    Artifacts1 --> |Batch 2| Batch2[Batch 2]
-    Batch1 --> |Process| BatchStep1["Step 2 (Batch 1)"]
-    Batch2 --> |Process| BatchStep2["Step 2 (Batch 2)"]
-    DockerImage --> |Run container for| BatchStep1
-    DockerImage --> |Run container for| BatchStep2
-    
-    %% Error handling
-    Step2B --> |App Error| RetryMechanism{Retry?}
-    RetryMechanism --> |Yes| RetryCount[Check Retry Count]
-    RetryCount --> |"< Max"| Step2B
-    RetryCount --> |">= Max"| FailureHandler[Failure Handler]
-    RetryMechanism --> |No| FailureHandler
-    FailureHandler --> |Notify| Alerts([Email/Slack Alerts])
-    FailureHandler --> |Callback| Webhooks([Webhook Callbacks])
-    
-    %% Completion
-    Step3 --> |Completion| PipelineComplete[Pipeline Complete]
+    %% Artifact flow
+    DockerContainer --> |Produces| Artifacts[(Artifacts)]
+    Artifacts --> |Stored in| ArtifactDB[Artifact Store]
+    ArtifactDB --> |Versioned & Named| VersionedArtifacts[Standardized Artifacts]
+    DockerContainer --> |Consumes| VersionedArtifacts
     
     %% Monitoring
-    Step1 -.-> |Logs| LogSystem[(Logging System)]
-    Step2A -.-> |Logs| LogSystem
-    Step2B -.-> |Logs| LogSystem
-    Step2C -.-> |Logs| LogSystem
-    Step3 -.-> |Logs| LogSystem
+    DockerContainer -.-> |Generates| Logs[Logs]
+    DockerContainer -.-> |Reports| Metrics[Metrics]
+    
+    %% Error handling
+    DockerContainer --> |May produce| Error{Error?}
+    Error --> |App Error| Retry[Retry Mechanism]
+    Error --> |Business Error| FailureHandler[Failure Handler]
+    Retry --> |If count < max| DockerContainer
+    Retry --> |If count >= max| FailureHandler
+    FailureHandler --> |Notifies| Alerts[Alerts & Webhooks]
 ```
 
 ## Artifact Management
